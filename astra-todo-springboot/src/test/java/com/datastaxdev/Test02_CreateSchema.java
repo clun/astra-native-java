@@ -15,19 +15,22 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
-// --> Eclipse Support
+//--> Eclipse Support
 @SuppressWarnings("deprecation")
 @RunWith(JUnitPlatform.class)
-// <--
+//<--
 
 @SpringJUnitConfig
 @TestPropertySource(locations="/application.properties")
-public class Ex1_ConnectivityToAstraExplicitTest {
-    
+public class Test02_CreateSchema {
+
     /** Logger for the class. */
-    private static Logger LOGGER = LoggerFactory.getLogger(Ex1_ConnectivityToAstraExplicitTest.class);
-    
+    private static Logger LOGGER = LoggerFactory.getLogger(Test02_CreateSchema.class);
+
     @Value("${spring.data.cassandra.username}")
     private String username;
     
@@ -39,11 +42,10 @@ public class Ex1_ConnectivityToAstraExplicitTest {
     
     @Value("${datastax.astra.secure-connect-bundle}")
     private String cloudSecureBundle;
-     
+    
     @Test
-    @DisplayName("Test connectivity to Astra explicit values")
-    public void should_connect_to_Astra() {
-        
+    @DisplayName("Test to create a table in ASTRA")
+    public void should_create_expected_table() {
         // Given interface is properly populated
         Assertions.assertTrue(new File(cloudSecureBundle).exists(), 
                     "File '" + cloudSecureBundle + "' has not been found\n"
@@ -56,10 +58,23 @@ public class Ex1_ConnectivityToAstraExplicitTest {
                 .withAuthCredentials(username, password)
                 .withKeyspace(keyspace)
                 .build()) {
-            
-            // Then connection is successfull
-            LOGGER.info(" + [OK] - Connection Established to Astra with Keyspace {}", 
+            LOGGER.info("Connection Established to Astra with Keyspace '{}'", 
                     cqlSession.getKeyspace().get());
+            SimpleStatement stmtCreateTable = SchemaBuilder
+                    .createTable("todoitems")
+                    .ifNotExists()
+                    .withPartitionKey("user_id", DataTypes.UUID)
+                    .withClusteringColumn("item_id", DataTypes.UUID)
+                    .withColumn("title",     DataTypes.TEXT)
+                    .withColumn("completed", DataTypes.BOOLEAN)
+                    .withColumn("offset",     DataTypes.INT)
+                    .build();
+            
+            // When creating the table
+            cqlSession.execute(stmtCreateTable);
+            
+            // Then table is created
+            LOGGER.info("Table '{}' has been created (if needed).", "todoitems");
         }
     }
 }

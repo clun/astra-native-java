@@ -10,7 +10,7 @@ import com.datastaxdev.todo.TodoItemKey;
 import com.datastaxdev.todo.TodoItemRepository;
 
 @SpringBootTest
-class TodoApplicationTests {
+class Test03_SaveTask {
 
     @Autowired
     private TodoItemRepository repo;

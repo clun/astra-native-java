@@ -15,22 +15,19 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.SimpleStatement;
-import com.datastax.oss.driver.api.core.type.DataTypes;
-import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
-//--> Eclipse Support
+// --> Eclipse Support
 @SuppressWarnings("deprecation")
 @RunWith(JUnitPlatform.class)
-//<--
+// <--
 
 @SpringJUnitConfig
 @TestPropertySource(locations="/application.properties")
-public class Ex2_CreateSchemaInAstraTest {
-
+public class Test01_Connect {
+    
     /** Logger for the class. */
-    private static Logger LOGGER = LoggerFactory.getLogger(Ex2_CreateSchemaInAstraTest.class);
-
+    private static Logger LOGGER = LoggerFactory.getLogger(Test01_Connect.class);
+    
     @Value("${spring.data.cassandra.username}")
     private String username;
     
@@ -42,10 +39,11 @@ public class Ex2_CreateSchemaInAstraTest {
     
     @Value("${datastax.astra.secure-connect-bundle}")
     private String cloudSecureBundle;
-    
+     
     @Test
-    @DisplayName("Test to create a table in ASTRA")
-    public void should_create_expected_table() {
+    @DisplayName("Test connectivity to Astra explicit values")
+    public void should_connect_to_Astra() {
+        
         // Given interface is properly populated
         Assertions.assertTrue(new File(cloudSecureBundle).exists(), 
                     "File '" + cloudSecureBundle + "' has not been found\n"
@@ -58,23 +56,10 @@ public class Ex2_CreateSchemaInAstraTest {
                 .withAuthCredentials(username, password)
                 .withKeyspace(keyspace)
                 .build()) {
-            LOGGER.info("Connection Established to Astra with Keyspace '{}'", 
+            
+            // Then connection is successfull
+            LOGGER.info(" + [OK] - Connection Established to Astra with Keyspace {}", 
                     cqlSession.getKeyspace().get());
-            SimpleStatement stmtCreateTable = SchemaBuilder
-                    .createTable("todoitems")
-                    .ifNotExists()
-                    .withPartitionKey("user_id", DataTypes.UUID)
-                    .withClusteringColumn("item_id", DataTypes.UUID)
-                    .withColumn("title",     DataTypes.TEXT)
-                    .withColumn("completed", DataTypes.BOOLEAN)
-                    .withColumn("offset",     DataTypes.INT)
-                    .build();
-            
-            // When creating the table
-            cqlSession.execute(stmtCreateTable);
-            
-            // Then table is created
-            LOGGER.info("Table '{}' has been created (if needed).", "todoitems");
         }
     }
 }
