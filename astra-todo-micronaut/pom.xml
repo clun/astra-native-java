@@ -15,6 +15,7 @@
   <properties>
     <packaging>jar</packaging>
     <micronaut.version>3.2.6</micronaut.version>
+    <maven.plugin.micronaut.version>3.1.0</maven.plugin.micronaut.version>
     <lombok.version>1.18.20</lombok.version>
     <exec.mainClass>com.datastaxdev.Application</exec.mainClass>
     <micronaut.runtime>netty</micronaut.runtime>
@@ -113,7 +114,7 @@
       <plugin>
         <groupId>io.micronaut.build</groupId>
         <artifactId>micronaut-maven-plugin</artifactId>
-        <version>${micronaut.version}</version>
+        <version>${maven.plugin.micronaut.version}</version>
       </plugin>
       
       <plugin>
