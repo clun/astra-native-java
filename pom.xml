@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.datastaxdev</groupId>
+	<artifactId>astra-todo-parent</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<name>Native Java with Astra (todo)</name>
+	<packaging>pom</packaging>
+	<inceptionYear>2022</inceptionYear>
+	<description>Show todo applications with multiple backends and Cassandra</description>
+	<url>https://github.com/clun/astra-native-java</url>
+	<organization>
+		<name>DataStax</name>
+		<url>http://datastax.com</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Apache 2</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<properties>
+		<!-- Here are only the librairies shared in between sub projects -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java-driver.version>4.13.0</java-driver.version>
+		<logback.version>1.2.9</logback.version>
+		<jackson.version>2.13.1</jackson.version>
+		<!-- Junit -->
+		<junit-platform.version>1.8.2</junit-platform.version>
+		<junit-jupiter.version>5.8.2</junit-jupiter.version>
+		<!-- Java -->
+		<maven.plugin.compiler.source>11</maven.plugin.compiler.source>
+		<maven.plugin.compiler.target>11</maven.plugin.compiler.target>
+		<!-- Maven -->
+		<version.maven.plugin.failsafe>2.22.2</version.maven.plugin.failsafe>
+		<version.maven.plugin.surefire>2.22.2</version.maven.plugin.surefire>
+		<version.maven.plugin.compiler>3.8.1</version.maven.plugin.compiler>
+		<version.maven.plugin.jar>3.2.0</version.maven.plugin.jar>
+		<version.maven.plugin.resources>3.2.0</version.maven.plugin.resources>
+		<version.maven.plugin.dependency>2.8</version.maven.plugin.dependency>
+		<version.maven.plugin.xml-format>3.0.7</version.maven.plugin.xml-format>
+		<version.maven.plugin.fmt>2.2.0</version.maven.plugin.fmt>
+	</properties>
+	<modules>
+		<module>astra-todo-core</module>
+		<module>astra-todo-quarkus</module>
+		<module>astra-todo-micronaut</module>
+		<module>astra-todo-springboot</module>
+	</modules>
+	
+	<dependencyManagement>
+		<dependencies>
+			
+			<!-- Working with JSON -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+	    		<groupId>org.everit.json</groupId>
+	    		<artifactId>org.everit.json.schema</artifactId>
+	    		<version>${json-schema.version}</version>
+	    	</dependency>
+			
+			<!-- Java Drivers -->
+			<dependency>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-core</artifactId>
+				<version>${java-driver.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-query-builder</artifactId>
+				<version>${java-driver.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-mapper-runtime</artifactId>
+				<version>${java-driver.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-mapper-processor</artifactId>
+				<version>${java-driver.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-metrics-micrometer</artifactId>
+				<version>${java-driver.version}</version>
+			</dependency>
+			
+			<!-- Logging -->
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>${logback.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-core</artifactId>
+				<version>${logback.version}</version>
+			</dependency>
+			
+			<!-- JUNIT -->
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-api</artifactId>
+				<version>${junit-jupiter.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-engine</artifactId>
+				<version>${junit-jupiter.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.platform</groupId>
+				<artifactId>junit-platform-runner</artifactId>
+				<version>${junit-platform.version}</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${version.maven.plugin.compiler}</version>
+				<configuration>
+					<source>${maven.plugin.compiler.source}</source>
+					<target>${maven.plugin.compiler.target}</target>
+					<showWarnings>false</showWarnings>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${version.maven.plugin.surefire}</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.junit.jupiter</groupId>
+						<artifactId>junit-jupiter-engine</artifactId>
+						<version>${junit-jupiter.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>${version.maven.plugin.dependency}</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>${version.maven.plugin.jar}</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>${version.maven.plugin.resources}</version>
+				<configuration>
+					<escapeString>\</escapeString>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<distributionManagement>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+	
+	<developers>
+		<developer>
+			<id>clunven</id>
+			<name>Cedrick Lunven</name>
+			<email>cedrick.lunven@gmail.com</email>
+			<url>https://github.com/clun</url>
+		</developer>
+	</developers>
+
+</project>

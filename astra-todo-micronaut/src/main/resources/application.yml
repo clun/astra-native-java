@@ -1,3 +1,7 @@
 micronaut:
+
+  server:
+    port: 9292
+    
   application:
-    name: tutorial
+    name: astra-todo-micronaut
