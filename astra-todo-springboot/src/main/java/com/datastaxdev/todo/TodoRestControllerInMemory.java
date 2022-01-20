@@ -9,9 +9,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.datastaxdev.todo.web.Todo;
+
 @RestController
 @CrossOrigin(
   methods = {POST, GET, OPTIONS, PUT, DELETE, PATCH},
@@ -35,63 +36,71 @@ import org.springframework.web.bind.annotation.RestController;
   allowedHeaders = {"x-requested-with", "origin", "content-type", "accept"},
   origins = "*" 
 )
-@RequestMapping("/api/v0/todos/")
+@RequestMapping("/api/inmemory")
 public class TodoRestControllerInMemory {
     
-    private Map<UUID, Todo> todoStore = new ConcurrentHashMap<>();
+    private TodoItemRepository repo = new TodoItemRepositoryInMemory();
     
-    @GetMapping
-    public Stream<Todo> findAll(HttpServletRequest req) {
-        return todoStore.values().stream().map(t -> t.setUrl(req));
+    @GetMapping("/{user}/todos/")
+    public Stream<Todo> findAllByUser(HttpServletRequest req, 
+            @PathVariable(value = "user") String user) {
+        return repo.findByUser(user).stream()
+                   .map(TodoUtils::mapAsTodo)
+                   .map(t -> TodoUtils.setUrl(t, req));
     }
     
-    @GetMapping("/{uid}")
-    public ResponseEntity<Todo> findById(HttpServletRequest req, @PathVariable(value = "uid") String uid) {
-        Todo todo = todoStore.get(UUID.fromString(uid));
-        return (null == todo) ? ResponseEntity.notFound().build() : ResponseEntity.ok(todo.setUrl(req));
+    @GetMapping("/{user}/todos/{uid}")
+    public ResponseEntity<Todo> findById(HttpServletRequest req,
+            @PathVariable(value = "user") String user,
+            @PathVariable(value = "uid") String itemId) {
+        Optional<TodoItem> e = repo.findById(user, UUID.fromString(itemId));
+        if (e.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(TodoUtils.mapAsTodo(e.get()).setUrl(req.getRequestURL().toString()));
     }
      
-    @PostMapping
-    public ResponseEntity<Todo> create(HttpServletRequest req, @RequestBody Todo todoReq) 
+    @PostMapping("/{user}/todos/")
+    public ResponseEntity<Todo> create(HttpServletRequest req, 
+            @PathVariable(value = "user") String user,
+            @RequestBody Todo todoReq) 
     throws URISyntaxException {
-        Todo newTodo = new Todo(todoReq.getTitle(), todoReq.getOrder(), todoReq.isCompleted());
-        newTodo.setUrl(req);
-        todoStore.put(newTodo.getUuid(), newTodo);
-        return ResponseEntity.created(new URI(newTodo.getUrl())).body(newTodo);
+        TodoItem te = TodoUtils.mapAsTodoEntity(todoReq, user);
+        repo.save(te);
+        todoReq.setUuid(te.getKey().getItemId());
+        TodoUtils.setUrl(todoReq, req);
+        return ResponseEntity.created(new URI(todoReq.getUrl())).body(todoReq);
     }
     
-    @PatchMapping("{uid}")
-    public ResponseEntity<Todo> update(HttpServletRequest req, @PathVariable(value = "uid") String uid, @RequestBody Todo todoReq) 
+    @PatchMapping("/{user}/todos/{uid}")
+    public ResponseEntity<Todo> update(HttpServletRequest req, 
+            @PathVariable(value = "user") String user,
+            @PathVariable(value = "uid") String uid, 
+            @RequestBody Todo todoReq) 
     throws URISyntaxException {
-        if (!todoStore.containsKey(UUID.fromString(uid))) {
-            return ResponseEntity.notFound().build();
-        }
-        Todo existingTodo = todoStore.get(UUID.fromString(uid));
-        if (null != todoReq.getTitle()) {
-            existingTodo.setTitle(todoReq.getTitle());
-        }
-        if (existingTodo.getOrder() != todoReq.getOrder()) {
-            existingTodo.setOrder(todoReq.getOrder());
-        }
-        if (existingTodo.isCompleted() != todoReq.isCompleted()) {
-            existingTodo.setCompleted(todoReq.isCompleted());
-        }
-        return ResponseEntity.accepted().body(existingTodo);
+        todoReq.setUuid(UUID.fromString(uid));
+        todoReq.setUrl(req.getRequestURL().toString());
+        TodoItem item = TodoUtils.mapAsTodoEntity(todoReq, user);
+        repo.save(item);
+        return ResponseEntity.accepted().body(todoReq);
     }
     
-    @DeleteMapping("{uid}")
-    public ResponseEntity<Void> deleteById(@PathVariable(value = "uid") String uid) {
-        if (!todoStore.containsKey(UUID.fromString(uid))) {
+    @DeleteMapping("/{user}/todos/{uid}")
+    public ResponseEntity<Void> deleteById(
+            @PathVariable(value = "user") String user,
+            @PathVariable(value = "uid")  String uid) {
+        if (repo.findById(user, UUID.fromString(uid)).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        todoStore.remove(UUID.fromString(uid));
+        repo.deleteById(user, UUID.fromString(uid));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
     
-    @DeleteMapping
-    public ResponseEntity<Void> deleteAll(HttpServletRequest request) {
-        todoStore.clear();
+    @DeleteMapping("/{user}/todos/")
+    public ResponseEntity<Void> deleteAllByUser(@PathVariable(value = "user") String user) {
+        repo.deleteByUser(user);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+    
     
 }

@@ -21,18 +21,21 @@
 		</license>
 	</licenses>
 	<properties>
-		<!-- Here are only the librairies shared in between sub projects -->
+		
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		
 		<java-driver.version>4.13.0</java-driver.version>
 		<logback.version>1.2.9</logback.version>
 		<jackson.version>2.13.1</jackson.version>
+		
 		<!-- Junit -->
 		<junit-platform.version>1.8.2</junit-platform.version>
 		<junit-jupiter.version>5.8.2</junit-jupiter.version>
-		<!-- Java -->
+		
 		<maven.plugin.compiler.source>11</maven.plugin.compiler.source>
 		<maven.plugin.compiler.target>11</maven.plugin.compiler.target>
-		<!-- Maven -->
+		
 		<version.maven.plugin.failsafe>2.22.2</version.maven.plugin.failsafe>
 		<version.maven.plugin.surefire>2.22.2</version.maven.plugin.surefire>
 		<version.maven.plugin.compiler>3.8.1</version.maven.plugin.compiler>

@@ -7,13 +7,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.datastaxdev.todo.TodoItem;
 import com.datastaxdev.todo.TodoItemKey;
-import com.datastaxdev.todo.TodoItemRepository;
+import com.datastaxdev.todo.TodoItemRepositorySpringData;
 
 @SpringBootTest
 class Test03_SaveTask {
 
     @Autowired
-    private TodoItemRepository repo;
+    private TodoItemRepositorySpringData repo;
     
 	@Test
 	void shoud_save_task_when_save() {

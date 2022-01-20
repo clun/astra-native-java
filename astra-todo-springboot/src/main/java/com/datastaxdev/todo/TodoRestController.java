@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.datastaxdev.todo.web.Todo;
+
 @RestController
 @CrossOrigin(
  methods = {POST, GET, OPTIONS, PUT, DELETE, PATCH},
@@ -37,9 +39,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class TodoRestController {
     
-    private TodoItemRepository repo;
+    private TodoItemRepositorySpringData repo;
     
-    public TodoRestController(TodoItemRepository todoRepo) {
+    public TodoRestController(TodoItemRepositorySpringData todoRepo) {
         this.repo = todoRepo;
     }
     
@@ -47,8 +49,8 @@ public class TodoRestController {
     public Stream<Todo> findAllByUser(HttpServletRequest req, 
             @PathVariable(value = "user") String user) {
         return repo.findByKeyUserId(user).stream()
-                   .map(TodoRestController::mapAsTodo)
-                   .map(t -> t.setUrl(req));
+                   .map(TodoUtils::mapAsTodo)
+                   .map(t -> TodoUtils.setUrl(t, req));
     }
     
     @GetMapping("/{user}/todos/{uid}")
@@ -59,7 +61,7 @@ public class TodoRestController {
         if (e.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(mapAsTodo(e.get()).setUrl(req.getRequestURL().toString()));
+        return ResponseEntity.ok(TodoUtils.mapAsTodo(e.get()).setUrl(req.getRequestURL().toString()));
     }
      
     @PostMapping("/{user}/todos/")
@@ -67,10 +69,10 @@ public class TodoRestController {
             @PathVariable(value = "user") String user,
             @RequestBody Todo todoReq) 
     throws URISyntaxException {
-        TodoItem te = mapAsTodoEntity(todoReq, user);
+        TodoItem te = TodoUtils.mapAsTodoEntity(todoReq, user);
         repo.save(te);
         todoReq.setUuid(te.getKey().getItemId());
-        todoReq.setUrl(req);
+        TodoUtils.setUrl(todoReq, req);
         return ResponseEntity.created(new URI(todoReq.getUrl())).body(todoReq);
     }
     
@@ -82,7 +84,7 @@ public class TodoRestController {
     throws URISyntaxException {
         todoReq.setUuid(UUID.fromString(uid));
         todoReq.setUrl(req.getRequestURL().toString());
-        TodoItem item = mapAsTodoEntity(todoReq, user);
+        TodoItem item = TodoUtils.mapAsTodoEntity(todoReq, user);
         repo.save(item);
         return ResponseEntity.accepted().body(todoReq);
     }
@@ -104,24 +106,5 @@ public class TodoRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
     
-    private static Todo mapAsTodo(TodoItem te) {
-        Todo todo = new Todo();
-        todo.setTitle(te.getTitle());
-        todo.setOrder(te.getOffset());
-        todo.setUuid(te.getKey().getItemId());
-        todo.setCompleted(te.isCompleted());
-        return todo;
-    }
     
-    private TodoItem mapAsTodoEntity(Todo te, String user) {
-        TodoItem todo = new TodoItem();
-        if (null != te.getUuid()) {
-            todo.getKey().setItemId(te.getUuid());
-        }
-        todo.getKey().setUserId(user);
-        todo.setTitle(te.getTitle());
-        todo.setOffset(te.getOrder());
-        todo.setCompleted(te.isCompleted());
-        return todo;
-    }
 }

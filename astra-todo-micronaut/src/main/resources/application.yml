@@ -2,6 +2,12 @@ micronaut:
 
   server:
     port: 9292
+  
     
   application:
     name: astra-todo-micronaut
+    
+endpoints:
+  info:
+    enabled: true
+    sensitive: false    
