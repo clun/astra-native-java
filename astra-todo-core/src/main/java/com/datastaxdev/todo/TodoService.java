@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface TodoItemRepository {
+public interface TodoService {
     
     /**
      * Save Todoitems.
@@ -14,7 +14,7 @@ public interface TodoItemRepository {
      * @return
      *      updated todo with if if relevant
      */
-    TodoItem save(TodoItem todo);
+    TodoDto save(TodoDto todo);
     
     /**
      * Retrieve an task by its itentifier.
@@ -26,7 +26,7 @@ public interface TodoItemRepository {
      * @return
      *      if the Task exists
      */
-    Optional<TodoItem> findById(String userId, UUID itemId);
+    Optional<TodoDto> findById(String userId, UUID itemId);
     
     /**
      * Retrieve the list of Tasks for a user (if exist).
@@ -36,7 +36,7 @@ public interface TodoItemRepository {
      * @return
      *      list of Tasks for the user
      */
-    List<TodoItem> findByUser(String userId);
+    List<TodoDto> findByUser(String userId);
     
     /**
      * Delete a task from its identifier

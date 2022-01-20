@@ -1,4 +1,4 @@
-package com.datastaxdev.todo;
+package com.datastaxdev.todo.spring;
 
 import java.util.UUID;
 

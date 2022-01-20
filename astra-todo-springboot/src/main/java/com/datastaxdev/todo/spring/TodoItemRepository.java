@@ -1,4 +1,4 @@
-package com.datastaxdev.todo;
+package com.datastaxdev.todo.spring;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
  * For Basic operations you can leverage on Interface only repository
  */
 @Repository
-public interface TodoItemRepositorySpringData extends CassandraRepository<TodoItem, TodoItemKey> {
+public interface TodoItemRepository extends CassandraRepository<TodoItem, TodoItemKey> {
     
     /**
      * Retrieve all todos for a user as the userId is the partition key.

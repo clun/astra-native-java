@@ -16,7 +16,7 @@ import io.micronaut.validation.Validated;
 @Controller("/api/v1")
 public class TodoRestController {
     
-    private TodoItemRepositoryInMemory repo = new TodoItemRepositoryInMemory();
+    private TodoServiceInMemory repo = new TodoServiceInMemory();
     
     @Get(value = "/{user}/todos/", produces = MediaType.APPLICATION_JSON)
     public List<Todo> findAllByUser(HttpRequest<?> httpRequest, 
@@ -84,7 +84,7 @@ public class TodoRestController {
     }
     */
     
-    private static Todo mapAsTodo(TodoItem te) {
+    private static Todo mapAsTodo(TodoDto te) {
         Todo todo = new Todo();
         todo.setTitle(te.getTitle());
         todo.setOrder(te.getOffset());
@@ -93,8 +93,8 @@ public class TodoRestController {
         return todo;
     }
     
-    private TodoItem mapAsTodoEntity(Todo te, String user) {
-        TodoItem todo = new TodoItem();
+    private TodoDto mapAsTodoEntity(Todo te, String user) {
+        TodoDto todo = new TodoDto();
         if (null != te.getUuid()) {
             todo.setItemId(te.getUuid());
         }

@@ -16,38 +16,38 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @author Cedrick LUNVEN (@clunven)
  */
-public class TodoItemRepositoryInMemory implements TodoItemRepository {
+public class TodoServiceInMemory implements TodoService {
     
     /** Map < UserId, Map< ItemId, Todo > >. */
-    private Map<String, Map<UUID, TodoItem> > todoStore = new ConcurrentHashMap<>();
+    private Map<String, Map<UUID, TodoDto> > todoStore = new ConcurrentHashMap<>();
     
-    public TodoItemRepositoryInMemory() {
+    public TodoServiceInMemory() {
         sampleDatas();
     }
     
     public void sampleDatas() {
-        save(new TodoItem("john", "task_1"));
-        save(new TodoItem("john", "task_2"));
-        save(new TodoItem("john", "task_3"));
-        save(new TodoItem("mary", "xxx"));
+        save(new TodoDto(UUID.randomUUID(), "john", "task_1"));
+        save(new TodoDto(UUID.randomUUID(), "john", "task_2"));
+        save(new TodoDto(UUID.randomUUID(), "john", "task_3"));
+        save(new TodoDto(UUID.randomUUID(), "mary", "xxx"));
     }
     
     /** {@inheritDoc} */
-    public TodoItem save(TodoItem todo) {
+    public TodoDto save(TodoDto todo) {
         assertNotNull(todo);
         assertNotEmpty(todo.getUserId());
         if (null == todo.getItemId()) {
             todo.setItemId(UUID.randomUUID());
         }
         if (!todoStore.containsKey(todo.getUserId())) {
-            todoStore.put(todo.getUserId(), new HashMap<UUID, TodoItem>());
+            todoStore.put(todo.getUserId(), new HashMap<UUID, TodoDto>());
         } 
         todoStore.get(todo.getUserId()).put(todo.getItemId(), todo);
         return todo;
     }
 
     /** {@inheritDoc} */
-    public Optional<TodoItem> findById(String userId, UUID itemId) {
+    public Optional<TodoDto> findById(String userId, UUID itemId) {
         assertNotNull(itemId);
         assertNotEmpty(userId);
         return todoStore.containsKey(userId) ? 
@@ -56,11 +56,11 @@ public class TodoItemRepositoryInMemory implements TodoItemRepository {
     }
     
     /** {@inheritDoc} */
-    public List<TodoItem> findByUser(String userId) {
+    public List<TodoDto> findByUser(String userId) {
         assertNotEmpty(userId);
         return todoStore.containsKey(userId) ? 
-                new ArrayList<TodoItem>(todoStore.get(userId).values()) : 
-                new ArrayList<TodoItem>();
+                new ArrayList<TodoDto>(todoStore.get(userId).values()) : 
+                new ArrayList<TodoDto>();
     }
 
     /** {@inheritDoc} */
