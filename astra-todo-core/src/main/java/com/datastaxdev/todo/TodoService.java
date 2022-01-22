@@ -4,8 +4,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Definition of services to work with the Todo Application.
+ *
+ * @author Cedrick Lunven (@clunven)
+ */
 public interface TodoService {
-    
+
     /**
      * Save Todoitems.
      *

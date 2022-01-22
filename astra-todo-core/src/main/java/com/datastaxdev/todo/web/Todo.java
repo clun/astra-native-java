@@ -28,11 +28,8 @@ public class Todo {
        this.completed = completed;
     }
     
-    public Todo setUrl(String myUrl) {
-        if (url == null) {
-            url = myUrl.contains("gitpod") ? myUrl.replaceAll("http", "https") : myUrl;
-        }
-        return this;
+    public void setUrl(String myUrl) {
+        this.url = myUrl;
     }
 
     /**

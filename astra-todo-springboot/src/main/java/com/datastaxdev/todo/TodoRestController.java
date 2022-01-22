@@ -1,38 +1,23 @@
 package com.datastaxdev.todo;
 
-import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.OPTIONS;
-import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.datastaxdev.todo.web.Todo;
+import com.datastaxdev.utils.ValidationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.datastaxdev.todo.web.Todo;
-import com.datastaxdev.utils.ValidationUtils;
+import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
+
+import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @RestController
 @CrossOrigin(
@@ -72,7 +57,9 @@ public class TodoRestController {
         if (e.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(fromDto(e.get()).setUrl(req.getRequestURL().toString()));
+        Todo todo = fromDto(e.get());
+        updateUrl(todo, req);
+        return ResponseEntity.ok(todo);
     }
      
     @PostMapping("/{user}/todos/")
