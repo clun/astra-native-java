@@ -17,6 +17,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastaxdev.todo.cassandra.TodoServiceCassandraCql;
 import com.datastaxdev.todo.web.Todo;
 
+import io.micronaut.context.annotation.Property;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
@@ -37,19 +38,20 @@ public class TodoRestController {
     
     /** Logger for our Client. */
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoRestController.class);
+    
+    /** Persistence Options. */
+    private static final String PERSISTENCE_INMEMORY  = "inmemory"; 
+    private static final String PERSISTENCE_CASSANDRA = "cassandra"; 
 
+    /** CqlSession initialized from application.yaml */
     @Inject
     private CqlSession cqlSession;
     
-    //private TodoService repo = new TodoServiceInMemory();
+    /** Todo service reference. */
     private TodoService repo;
     
-    public TodoService getTodoService() {
-        if (repo == null) {
-            repo = new TodoServiceCassandraCql(cqlSession);
-        }
-        return repo;
-    }
+    @Property(name = "todo.persistence", defaultValue = PERSISTENCE_INMEMORY)
+    private String persistence;
     
     @Get(value = "/{user}/todos/")
     public List<Todo> findAllByUser(
@@ -69,6 +71,7 @@ public class TodoRestController {
         if (e.isEmpty()) return HttpResponse.notFound();
         Todo todo = fromDto(e.get());
         populateUrl(todo, ServerRequestContext.currentRequest().get());
+        //LOGGER.info("Find user={}, TODO={}", user, todo);
         return HttpResponse.ok(todo);
     }
 
@@ -76,11 +79,11 @@ public class TodoRestController {
     public HttpResponse<Todo> create(
             @PathVariable(value = "user") String user,
             @Body @NotNull Todo todoReq) throws URISyntaxException {
-        LOGGER.info("Create user={}, TODO={}", user, todoReq);
         TodoDto te = toDto(todoReq, user);
         te = getTodoService().save(te);
         todoReq.setUuid(te.getItemId());
         populateUrlWithId(todoReq, ServerRequestContext.currentRequest().get());
+        //LOGGER.info("Created user={}, TODO={}", user, todoReq);
         return HttpResponse.created(new URI(todoReq.getUrl())).body(todoReq);
     }
 
@@ -90,12 +93,12 @@ public class TodoRestController {
             @PathVariable(value = "uid") @NotEmpty  String itemId,
             @Body @NotNull Todo todo)
     throws URISyntaxException {
-        LOGGER.info("Updating user={} id {} with TODO {}", user, itemId, todo);
+        LOGGER.info("Updating user={} id={} with TODO {}", user, itemId, todo);
         Optional<TodoDto> e = getTodoService().findById(user, UUID.fromString(itemId));
         if (e.isEmpty()) return HttpResponse.notFound();
         todo.setUuid(UUID.fromString(itemId));
         TodoDto todoDto = toDto(todo, user);
-        repo.save(todoDto);
+        todoDto = getTodoService().save(todoDto);
         populateUrl(todo, ServerRequestContext.currentRequest().get());
         return HttpResponse.ok(todo);
     }
@@ -104,7 +107,7 @@ public class TodoRestController {
     public HttpResponse<Void> deleteById(
             @PathVariable(value = "user") String user,
             @PathVariable(value = "uid")  String uid) {
-        LOGGER.info("Delete TODO id {} for user {}", uid, user);
+        //LOGGER.info("Delete TODO id={} for user={}", uid, user);
         if (getTodoService().findById(user, UUID.fromString(uid)).isEmpty()) {
             return HttpResponse.notFound();
         }
@@ -116,6 +119,25 @@ public class TodoRestController {
     public HttpResponse<Void> deleteAllByUser(@PathVariable(value = "user") String user) {
         getTodoService().deleteByUser(user);
         return HttpResponse.noContent();
+    }
+    
+    /**
+     * Access todo service.
+     *
+     * @return
+     *      todo services
+     */
+    public TodoService getTodoService() {
+        if (repo == null) {
+            if (PERSISTENCE_INMEMORY.equals(persistence)) {
+                repo = new TodoServiceInMemory();
+                LOGGER.info("Using InMemory Persistence");
+            } else if (PERSISTENCE_CASSANDRA.equals(persistence)) {
+                repo = new TodoServiceCassandraCql(cqlSession);
+                LOGGER.info("Using Cassandra CQL Persistence");
+            }
+        }
+        return repo;
     }
 
     private Todo fromDto(TodoDto te) {

@@ -10,8 +10,8 @@ public class TodoDto {
     private String  userId;
     private UUID    itemId;
     private String  title;
-    private Boolean completed = false;
-    private Integer offset = 0;
+    private Boolean completed;
+    private Integer offset;
     
     public TodoDto() {}
     
@@ -20,6 +20,5 @@ public class TodoDto {
         this.userId  = userid;
         this.title   = title;
     }
-    
     
 }

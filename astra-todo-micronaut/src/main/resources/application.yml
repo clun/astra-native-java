@@ -11,6 +11,8 @@ micronaut:
 # Custom property TODOLIST
 # ===========================
 todo:
+  #persistence: inmemory
+  persistence: cassandra
   cassandra:
     create_schema: true
 

@@ -24,7 +24,7 @@ import com.datastaxdev.utils.ValidationUtils;
  * Implementation of the CRUD service with CORE CqlSession only.
  */
 public class TodoServiceCassandraCql implements TodoService {
-
+    
     /** Schema Constants. */
     public static final String TABLE_TODOITEMS   = "todoitems";
     public static final String TODO_USER_ID      = "user_id";
@@ -104,14 +104,27 @@ public class TodoServiceCassandraCql implements TodoService {
     public TodoDto save(TodoDto todo) {
         if (todo.getItemId() == null) {
             todo.setItemId(Uuids.timeBased());
+            cqlSession.execute(psInsertTodo.bind(
+                    todo.getUserId(), 
+                    todo.getItemId(), 
+                    todo.getTitle(), 
+                    todo.getCompleted(),
+                    todo.getOffset()));
+            return todo;
         }
+        
+        // Update by diff on not null fields to override value
+        TodoDto toBeUpdated = findById(todo.getUserId(), todo.getItemId()).get();
+        if (todo.getTitle() != null)     toBeUpdated.setTitle(todo.getTitle());
+        if (todo.getCompleted() != null) toBeUpdated.setCompleted(todo.getCompleted());
+        if (todo.getOffset() != null)    toBeUpdated.setOffset(todo.getOffset());
         cqlSession.execute(psInsertTodo.bind(
-                todo.getUserId(), 
-                todo.getItemId(), 
-                todo.getTitle(), 
-                todo.getCompleted(), 
-                todo.getOffset()));
-        return todo;
+                 toBeUpdated.getUserId(), 
+                 toBeUpdated.getItemId(), 
+                 toBeUpdated.getTitle(), 
+                 toBeUpdated.getCompleted(),
+                 toBeUpdated.getOffset()));
+        return toBeUpdated;
     }
 
     /** {@inheritDoc} */
@@ -186,7 +199,7 @@ public class TodoServiceCassandraCql implements TodoService {
                 .value(TODO_TITLE, QueryBuilder.bindMarker())
                 .value(TODO_COMPLETED, QueryBuilder.bindMarker())
                 .value(TODO_OFFSET, QueryBuilder.bindMarker())
-                .ifNotExists().build());
+                .build());
         
         // SELECT * FROM todo_items where user_id=?
         psSelectUserTodo = cqlSession.prepare(QueryBuilder

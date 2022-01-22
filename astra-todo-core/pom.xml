@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>astra-todo-core</artifactId>
 	<name>+ astra-todo-core</name>
-	
+
 	<parent>
 		<groupId>com.datastaxdev</groupId>
 		<artifactId>astra-todo-parent</artifactId>
@@ -17,7 +17,7 @@
 	</properties>
 
 	<dependencies>
-	
+
 		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -62,4 +62,28 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+								<version>${lombok.version}</version>
+							</path>
+							<path>
+								<groupId>com.datastax.oss</groupId>
+								<artifactId>java-driver-mapper-processor</artifactId>
+								<version>${java-driver.version}</version>
+							</path>
+						</annotationProcessorPaths>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 </project>
