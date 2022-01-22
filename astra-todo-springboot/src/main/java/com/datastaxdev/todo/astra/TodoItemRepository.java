@@ -1,9 +1,9 @@
-package com.datastaxdev.todo.spring;
-
-import java.util.List;
+package com.datastaxdev.todo.astra;
 
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * For Basic operations you can leverage on Interface only repository

@@ -1,18 +1,5 @@
 package com.datastaxdev.todo;
 
-import com.datastaxdev.todo.web.Todo;
-import io.micronaut.http.HttpRequest;
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.*;
-import io.micronaut.http.context.ServerRequestContext;
-import io.micronaut.http.uri.UriBuilder;
-import io.micronaut.validation.Validated;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -20,22 +7,57 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastaxdev.todo.cassandra.TodoServiceCassandraCql;
+import com.datastaxdev.todo.web.Todo;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Patch;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.http.context.ServerRequestContext;
+import io.micronaut.http.uri.UriBuilder;
+import io.micronaut.validation.Validated;
+import jakarta.inject.Inject;
+
 @Validated
 @Controller("/api/v1")
 public class TodoRestController {
     
     /** Logger for our Client. */
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoRestController.class);
+
+    @Inject
+    private CqlSession cqlSession;
     
-    private TodoService repo = new TodoServiceInMemory();
+    //private TodoService repo = new TodoServiceInMemory();
+    private TodoService repo;
     
-    @Get(value = "/{user}/todos/", produces = MediaType.APPLICATION_JSON)
+    public TodoService getTodoService() {
+        if (repo == null) {
+            repo = new TodoServiceCassandraCql(cqlSession);
+        }
+        return repo;
+    }
+    
+    @Get(value = "/{user}/todos/")
     public List<Todo> findAllByUser(
             @PathVariable(value = "user") @NotEmpty  String user) {
-        return repo.findByUser(user)
+        return getTodoService().findByUser(user)
                    .stream()
                    .map(this::fromDto)
-                   .map(t -> updateUrlWithId(t, ServerRequestContext.currentRequest().get()))
+                   .map(t -> populateUrlWithId(t, ServerRequestContext.currentRequest().get()))
                    .collect(Collectors.toList());
     }
 
@@ -43,10 +65,10 @@ public class TodoRestController {
     public HttpResponse<Todo> findById(
             @PathVariable(value = "user") @NotEmpty String user,
             @PathVariable(value = "uid")  @NotEmpty String itemId) {
-        Optional<TodoDto> e = repo.findById(user, UUID.fromString(itemId));
+        Optional<TodoDto> e = getTodoService().findById(user, UUID.fromString(itemId));
         if (e.isEmpty()) return HttpResponse.notFound();
         Todo todo = fromDto(e.get());
-        updateUrl(todo, ServerRequestContext.currentRequest().get());
+        populateUrl(todo, ServerRequestContext.currentRequest().get());
         return HttpResponse.ok(todo);
     }
 
@@ -56,9 +78,9 @@ public class TodoRestController {
             @Body @NotNull Todo todoReq) throws URISyntaxException {
         LOGGER.info("Create user={}, TODO={}", user, todoReq);
         TodoDto te = toDto(todoReq, user);
-        te = repo.save(te);
+        te = getTodoService().save(te);
         todoReq.setUuid(te.getItemId());
-        updateUrlWithId(todoReq, ServerRequestContext.currentRequest().get());
+        populateUrlWithId(todoReq, ServerRequestContext.currentRequest().get());
         return HttpResponse.created(new URI(todoReq.getUrl())).body(todoReq);
     }
 
@@ -69,12 +91,12 @@ public class TodoRestController {
             @Body @NotNull Todo todo)
     throws URISyntaxException {
         LOGGER.info("Updating user={} id {} with TODO {}", user, itemId, todo);
-        Optional<TodoDto> e = repo.findById(user, UUID.fromString(itemId));
+        Optional<TodoDto> e = getTodoService().findById(user, UUID.fromString(itemId));
         if (e.isEmpty()) return HttpResponse.notFound();
         todo.setUuid(UUID.fromString(itemId));
         TodoDto todoDto = toDto(todo, user);
         repo.save(todoDto);
-        updateUrl(todo, ServerRequestContext.currentRequest().get());
+        populateUrl(todo, ServerRequestContext.currentRequest().get());
         return HttpResponse.ok(todo);
     }
     
@@ -83,16 +105,16 @@ public class TodoRestController {
             @PathVariable(value = "user") String user,
             @PathVariable(value = "uid")  String uid) {
         LOGGER.info("Delete TODO id {} for user {}", uid, user);
-        if (repo.findById(user, UUID.fromString(uid)).isEmpty()) {
+        if (getTodoService().findById(user, UUID.fromString(uid)).isEmpty()) {
             return HttpResponse.notFound();
         }
-        repo.deleteById(user, UUID.fromString(uid));
+        getTodoService().deleteById(user, UUID.fromString(uid));
         return HttpResponse.noContent();
     }
     
     @Delete("/{user}/todos/")
     public HttpResponse<Void> deleteAllByUser(@PathVariable(value = "user") String user) {
-        repo.deleteByUser(user);
+        getTodoService().deleteByUser(user);
         return HttpResponse.noContent();
     }
 
@@ -115,16 +137,7 @@ public class TodoRestController {
         return dto;
     }
 
-    /**
-     * Update the todo web bean with its url (HateOAS).
-     * @param t
-     *      todo value
-     * @param req
-     *      current http request
-     * @return
-     *      value
-     */
-    private Todo updateUrlWithId(Todo t, HttpRequest<Object> req) {
+    private Todo populateUrlWithId(Todo t, HttpRequest<Object> req) {
         String fullUrl = new StringBuilder("http://")
                 .append(req.getServerAddress().getHostName())
                 .append(":")
@@ -138,16 +151,7 @@ public class TodoRestController {
         return t;
     }
 
-    /**
-     * Update the todo web bean with its url (HateOAS).
-     * @param t
-     *      todo value
-     * @param req
-     *      current http request
-     * @return
-     *      value
-     */
-    private Todo updateUrl(Todo t, HttpRequest<Object> req) {
+    private Todo populateUrl(Todo t, HttpRequest<Object> req) {
         String fullUrl = new StringBuilder("http://")
                 .append(req.getServerAddress().getHostName())
                 .append(":")

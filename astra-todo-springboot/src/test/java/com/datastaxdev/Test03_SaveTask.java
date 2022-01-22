@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.datastaxdev.todo.spring.TodoItemRepository;
-import com.datastaxdev.todo.spring.TodoItem;
-import com.datastaxdev.todo.spring.TodoItemKey;
+import com.datastaxdev.todo.astra.TodoItemRepository;
+import com.datastaxdev.todo.astra.TodoItem;
+import com.datastaxdev.todo.astra.TodoItemKey;
 
 @SpringBootTest
 class Test03_SaveTask {

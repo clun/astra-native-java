@@ -17,7 +17,7 @@
     <micronaut.version>3.2.6</micronaut.version>
     <maven.plugin.micronaut.version>3.1.0</maven.plugin.micronaut.version>
     <lombok.version>1.18.20</lombok.version>
-    <exec.mainClass>com.datastaxdev.Application</exec.mainClass>
+    <exec.mainClass>com.datastaxdev.TodoApplication</exec.mainClass>
     <micronaut.runtime>netty</micronaut.runtime>
   </properties>
   
@@ -35,6 +35,7 @@
   </dependencyManagement>
   
   <dependencies>
+
 	<dependency>
 	  <groupId>com.datastaxdev</groupId>
 	  <artifactId>astra-todo-core</artifactId>
@@ -58,7 +59,7 @@
       <artifactId>jakarta.annotation-api</artifactId>
       <scope>compile</scope>
     </dependency>
-    
+
   	<!-- Micronaut -->
   	<dependency>
       <groupId>io.micronaut</groupId>
@@ -72,6 +73,17 @@
     </dependency>
     <dependency>
       <groupId>io.micronaut</groupId>
+      <artifactId>micronaut-inject-java</artifactId>
+      <scope>compile</scope>
+      <exclusions>
+      	<exclusion>
+      	  <groupId>org.slf4j</groupId>
+      	  <artifactId>slf4j-simple</artifactId>
+      	</exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.micronaut</groupId>
       <artifactId>micronaut-validation</artifactId>
       <scope>compile</scope>
     </dependency>
@@ -80,12 +92,13 @@
       <artifactId>micronaut-runtime</artifactId>
       <scope>compile</scope>
     </dependency>
-     <dependency>
-      <groupId>io.micronaut</groupId>
-      <artifactId>micronaut-management</artifactId>
+
+    <dependency>
+      <groupId>io.micronaut.cassandra</groupId>
+      <artifactId>micronaut-cassandra</artifactId>
+      <scope>compile</scope>
     </dependency>
-    
-    <!-- Junit Test -->
+     
     <dependency>
       <groupId>io.micronaut.test</groupId>
       <artifactId>micronaut-test-junit5</artifactId>
@@ -106,27 +119,7 @@
       <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
     </dependency>
-      <dependency>
-          <groupId>com.datastaxdev</groupId>
-          <artifactId>astra-todo-springboot</artifactId>
-          <version>1.0.0-SNAPSHOT</version>
-          <scope>compile</scope>
-      </dependency>
-      <dependency>
-          <groupId>com.datastaxdev</groupId>
-          <artifactId>astra-todo-springboot</artifactId>
-          <version>1.0.0-SNAPSHOT</version>
-          <scope>compile</scope>
-      </dependency>
-      <dependency>
-          <groupId>com.datastaxdev</groupId>
-          <artifactId>astra-todo-springboot</artifactId>
-          <version>1.0.0-SNAPSHOT</version>
-          <scope>compile</scope>
-      </dependency>
   </dependencies>
-  
-  
   
   <build>
     <plugins>
@@ -167,8 +160,8 @@
             </path>
           </annotationProcessorPaths>
           <compilerArgs>
-            <arg>-Amicronaut.processing.group=com.datastax</arg>
-            <arg>-Amicronaut.processing.module=tutorial</arg>
+            <arg>-Amicronaut.processing.group=com.datastaxdev</arg>
+            <arg>-Amicronaut.processing.module=todo-astra-micronaut</arg>
           </compilerArgs>
         </configuration>
       </plugin>

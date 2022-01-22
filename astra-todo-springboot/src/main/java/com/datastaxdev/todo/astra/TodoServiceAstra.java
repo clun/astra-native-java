@@ -1,19 +1,18 @@
-package com.datastaxdev.todo.spring;
+package com.datastaxdev.todo.astra;
+
+import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.datastaxdev.todo.TodoDto;
+import com.datastaxdev.todo.TodoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
-
-import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.datastaxdev.todo.TodoDto;
-import com.datastaxdev.todo.TodoService;
-
 @Repository("todo.service.spring-data")
-public class TodoServiceSpring implements TodoService {
+public class TodoServiceAstra implements TodoService {
 
     @Autowired
     private TodoItemRepository springDataRepo;
