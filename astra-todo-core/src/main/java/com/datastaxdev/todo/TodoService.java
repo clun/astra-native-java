@@ -11,6 +11,11 @@ import java.util.UUID;
  */
 public interface TodoService {
 
+    /** Persistence Options. */
+    String PERSISTENCE_INMEMORY      = "inmemory"; 
+    String PERSISTENCE_CASSANDRA_CQL = "cassandra-cql";
+    String PERSISTENCE_CASSANDRA_OM  = "cassandra-om"; 
+    
     /**
      * Save Todoitems.
      *

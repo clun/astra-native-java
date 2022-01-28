@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastaxdev.todo.cassandra.TodoServiceCassandraCql;
+import com.datastaxdev.todo.cassandra.TodoServicesCassandraOM;
 import com.datastaxdev.todo.web.Todo;
 
 import io.micronaut.context.annotation.Property;
@@ -39,10 +40,6 @@ public class TodoRestController {
     /** Logger for our Client. */
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoRestController.class);
     
-    /** Persistence Options. */
-    private static final String PERSISTENCE_INMEMORY  = "inmemory"; 
-    private static final String PERSISTENCE_CASSANDRA = "cassandra"; 
-
     /** CqlSession initialized from application.yaml */
     @Inject
     private CqlSession cqlSession;
@@ -50,7 +47,7 @@ public class TodoRestController {
     /** Todo service reference. */
     private TodoService repo;
     
-    @Property(name = "todo.persistence", defaultValue = PERSISTENCE_INMEMORY)
+    @Property(name = "todo.persistence", defaultValue = TodoService.PERSISTENCE_INMEMORY)
     private String persistence;
     
     @Get(value = "/{user}/todos/")
@@ -93,7 +90,7 @@ public class TodoRestController {
             @PathVariable(value = "uid") @NotEmpty  String itemId,
             @Body @NotNull Todo todo)
     throws URISyntaxException {
-        LOGGER.info("Updating user={} id={} with TODO {}", user, itemId, todo);
+        //LOGGER.info("Updating user={} id={} with TODO {}", user, itemId, todo);
         Optional<TodoDto> e = getTodoService().findById(user, UUID.fromString(itemId));
         if (e.isEmpty()) return HttpResponse.notFound();
         todo.setUuid(UUID.fromString(itemId));
@@ -129,12 +126,15 @@ public class TodoRestController {
      */
     public TodoService getTodoService() {
         if (repo == null) {
-            if (PERSISTENCE_INMEMORY.equals(persistence)) {
+            if (TodoService.PERSISTENCE_INMEMORY.equals(persistence)) {
                 repo = new TodoServiceInMemory();
                 LOGGER.info("Using InMemory Persistence");
-            } else if (PERSISTENCE_CASSANDRA.equals(persistence)) {
+            } else if (TodoService.PERSISTENCE_CASSANDRA_CQL.equals(persistence)) {
                 repo = new TodoServiceCassandraCql(cqlSession);
                 LOGGER.info("Using Cassandra CQL Persistence");
+            } else if (TodoService.PERSISTENCE_CASSANDRA_OM.equals(persistence)) {
+                repo = new TodoServicesCassandraOM(cqlSession);
+                LOGGER.info("Using Cassandra Object Mapping Persistence");
             }
         }
         return repo;

@@ -12,7 +12,8 @@ micronaut:
 # ===========================
 todo:
   #persistence: inmemory
-  persistence: cassandra
+  #persistence: cassandra-cql
+  persistence: cassandra-om
   cassandra:
     create_schema: true
 

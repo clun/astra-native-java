@@ -38,6 +38,13 @@
   </dependencyManagement>
   
   <dependencies>
+  
+	<dependency>
+	  <groupId>com.datastaxdev</groupId>
+	  <artifactId>astra-todo-core</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-reactive</artifactId>
@@ -54,7 +61,6 @@
     <dependency>
       <groupId>com.datastax.oss</groupId>
       <artifactId>java-driver-mapper-runtime</artifactId>
-      <version>${cassandra.driver.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

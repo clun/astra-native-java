@@ -22,14 +22,6 @@ public class TodoServiceInMemory implements TodoService {
     private Map<String, Map<UUID, TodoDto> > todoStore = new ConcurrentHashMap<>();
     
     public TodoServiceInMemory() {
-        sampleDatas();
-    }
-    
-    public void sampleDatas() {
-        save(new TodoDto(UUID.randomUUID(), "john", "task_1"));
-        save(new TodoDto(UUID.randomUUID(), "john", "task_2"));
-        save(new TodoDto(UUID.randomUUID(), "john", "task_3"));
-        save(new TodoDto(UUID.randomUUID(), "mary", "xxx"));
     }
     
     /** {@inheritDoc} */
