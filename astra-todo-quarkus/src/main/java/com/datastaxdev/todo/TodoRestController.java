@@ -1,6 +1,5 @@
 package com.datastaxdev.todo;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
@@ -22,15 +21,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.resteasy.reactive.server.spi.ServerRequestContext;
 
 import com.datastax.oss.quarkus.runtime.api.session.QuarkusCqlSession;
 import com.datastaxdev.todo.cassandra.TodoServiceCassandraCql;
 import com.datastaxdev.todo.cassandra.TodoServicesCassandraOM;
 import com.datastaxdev.todo.web.Todo;
 
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.PathVariable;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.common.annotation.Blocking;
 import io.vertx.core.spi.observability.HttpRequest;
@@ -110,13 +106,14 @@ public class TodoRestController {
     public Response create(
             @Context HttpRequest req,
             @PathParam(value = "user") String user,
-            @Body Todo todoReq) throws URISyntaxException {
+            Todo todoReq) throws URISyntaxException {
         TodoDto te = toDto(todoReq, user);
         te = getTodoService().save(te);
         todoReq.setUuid(te.getItemId());
         populateUrlWithId(todoReq, req);
         //LOGGER.info("Created user={}, TODO={}", user, todoReq);
-        return Response.created(new URI(todoReq.getUrl())).body(todoReq);
+        //return Response.created(new URI(todoReq.getUrl())).body(todoReq);
+        return null;
     }
     
     /**
