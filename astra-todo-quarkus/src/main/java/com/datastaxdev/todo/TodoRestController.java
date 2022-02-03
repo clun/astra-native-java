@@ -1,5 +1,6 @@
 package com.datastaxdev.todo;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -19,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -29,7 +33,6 @@ import com.datastaxdev.todo.web.Todo;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.common.annotation.Blocking;
-import io.vertx.core.spi.observability.HttpRequest;
 
 /**
  * Expose the todo Interface.
@@ -44,6 +47,9 @@ public class TodoRestController {
     
     @Inject
     private QuarkusCqlSession cqlSession;
+    
+    @Context
+    private UriInfo uriInfo;
     
     @ConfigProperty(name = "todo.persistence", defaultValue = TodoService.PERSISTENCE_INMEMORY)
     private String persistence;
@@ -73,13 +79,11 @@ public class TodoRestController {
     @Path("/{user}/todos/")
     @Blocking
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Todo> findAllByUser(
-            @Context HttpRequest req,
-            @PathParam(value = "user") String user) {
+    public List<Todo> findAllByUser(@PathParam(value = "user") String user) {
         return getTodoService().findByUser(user)
                    .stream()
                    .map(this::fromDto)
-                   .map(t -> populateUrlWithId(t, req))
+                   .map(t -> populateUrlWithId(t))
                    .collect(Collectors.toList());
     }
     
@@ -88,13 +92,12 @@ public class TodoRestController {
     @Blocking
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(
-            @Context HttpRequest req,
             @PathParam(value = "user") String user,
             @PathParam(value = "uid")  String itemId) {
         Optional<TodoDto> e = getTodoService().findById(user, UUID.fromString(itemId));
         if (e.isEmpty()) return Response.status(Status.NOT_FOUND).build();
         Todo todo = fromDto(e.get());
-        populateUrl(todo, req);
+        populateUrl(todo);
         return Response.ok(todo).build();
     }
 
@@ -104,16 +107,55 @@ public class TodoRestController {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(
-            @Context HttpRequest req,
             @PathParam(value = "user") String user,
             Todo todoReq) throws URISyntaxException {
         TodoDto te = toDto(todoReq, user);
         te = getTodoService().save(te);
         todoReq.setUuid(te.getItemId());
-        populateUrlWithId(todoReq, req);
-        //LOGGER.info("Created user={}, TODO={}", user, todoReq);
-        //return Response.created(new URI(todoReq.getUrl())).body(todoReq);
-        return null;
+        populateUrlWithId(todoReq);
+        return Response
+            .created(new URI(todoReq.getUrl()))
+            .entity(todoReq)
+            .build();
+    }
+    
+    @PATCH
+    @Path("/{user}/todos/{uid}")
+    @Blocking
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response update(
+            @PathParam(value = "user")  String user,
+            @PathParam(value = "uid")  String itemId,
+            Todo todo)
+    throws URISyntaxException {
+        Optional<TodoDto> e = getTodoService().findById(user, UUID.fromString(itemId));
+        if (e.isEmpty()) return Response.status(Status.NOT_FOUND).build();
+        todo.setUuid(UUID.fromString(itemId));
+        TodoDto todoDto = toDto(todo, user);
+        todoDto = getTodoService().save(todoDto);
+        populateUrl(todo);
+        return Response.ok().entity(todo).build();
+    }
+    
+    @DELETE
+    @Path("/{user}/todos/{uid}")
+    @Blocking
+    public Response deleteById(
+            @PathParam(value = "user")  String user,
+            @PathParam(value = "uid")  String uid) {
+        if (getTodoService().findById(user, UUID.fromString(uid)).isEmpty()) {
+            return  Response.status(Status.NOT_FOUND).build();
+        }
+        getTodoService().deleteById(user, UUID.fromString(uid));
+        return Response.noContent().build();
+    }
+    
+    @DELETE
+    @Path("/{user}/todos/")
+    public Response deleteAllByUser(@PathParam(value = "user")  String user) {
+        getTodoService().deleteByUser(user);
+        return Response.noContent().build();
     }
     
     /**
@@ -153,25 +195,23 @@ public class TodoRestController {
         dto.setCompleted(te.isCompleted());
         return dto;
     }
-
-    private Todo populateUrlWithId(Todo t, HttpRequest req) {
-        
-        String fullUrl = new StringBuilder(req.absoluteURI())
-                .append(t.getUuid().toString())
-                .toString();
-        if (fullUrl.contains("gitpod")) {
-            fullUrl.replaceAll("http://", "https://");
+    
+    private Todo populateUrlWithId(Todo t) {
+        String url = uriInfo.getAbsolutePathBuilder().scheme("http").build().toString();
+        if (url.contains("gitpod")) {
+            url.replaceAll("http://", "https://");
         }
-        t.setUrl(fullUrl);
+        url += t.getUuid().toString();
+        t.setUrl(url);
         return t;
     }
 
-    private Todo populateUrl(Todo t, HttpRequest req) {
-        String fullUrl = req.absoluteURI();
-        if (fullUrl.contains("gitpod")) {
-            fullUrl.replaceAll("http://", "https://");
+    private Todo populateUrl(Todo t) {
+        String url = uriInfo.getAbsolutePathBuilder().scheme("http").build().toString();
+        if (url.contains("gitpod")) {
+            url.replaceAll("http://", "https://");
         }
-        t.setUrl(fullUrl);
+        t.setUrl(url);
         return t;
     }
     

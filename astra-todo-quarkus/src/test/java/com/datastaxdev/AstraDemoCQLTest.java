@@ -12,9 +12,8 @@ public class AstraDemoCQLTest {
     @Test
     public void testHelloEndpoint() {
         given()
-          .when().get("/hello")
-          .then()
-             .statusCode(200);
+          .when().get("/api/v1/john/todos/")
+          .then().statusCode(200);
     }
 
 }
