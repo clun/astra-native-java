@@ -13,7 +13,7 @@
   
   <properties>
     
-    <quarkus.platform.version>2.3.1.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.7.0.Final</quarkus.platform.version>
     <cassandra.quarkus.version>1.1.1</cassandra.quarkus.version>
     <cassandra.driver.version>4.13.0</cassandra.driver.version>
 
@@ -188,6 +188,7 @@
       </build>
       <properties>
         <quarkus.package.type>native</quarkus.package.type>
+        <quarkus.native.additional-build-args>-H:ReflectionConfigurationFiles=reflection-config.json, --allow-incomplete-classpath</quarkus.native.additional-build-args>
       </properties>
     </profile>
   </profiles>
